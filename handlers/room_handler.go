@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"encoding/json"
-	"log"
 )
 
 func NewRoom(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +17,7 @@ func NewRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gamez := game.FindGame(gameId).AddRoom(room)
+	game.FindGame(gameId).AddRoom(room)
 
 	js, err := json.Marshal(room)
 	if err != nil {
