@@ -39,13 +39,13 @@ func BuildRoom(roomHash string) (*Room, error) {
 
 	if exitSide := rand.Intn(4); exitSide%2 == 0 {
 		room.ExitPos = Position{
-			X: rand.Intn(room.Width) + 1,
+			X: rand.Intn(room.Width-1) + 1,
 			Y: (((exitSide + 1) % 2) * (room.Height - 1)) + 1,
 		}
 	} else {
 		room.ExitPos = Position{
 			X: (((exitSide + 1) % 2) * (room.Width - 1)) + 1,
-			Y: rand.Intn(room.Height) + 1,
+			Y: rand.Intn(room.Height-1) + 1,
 		}
 	}
 	room.PadX = (20 - room.Width) / 2
