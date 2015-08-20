@@ -6,6 +6,22 @@ dungeons.prototype = {
     game.load.image('door', 'images/tiles/door.png');
 
     game.load.image('player', 'images/sprites/player.png');
+    this.playerSocket = new WebSocket("ws://localhost:8080/stream/player");
+    this.playerSocket.onmessage = this.playerMessage;
+    _this = this;
+    this.playerSocket.onopen = function(){_this.playerSocketOpen = true};
+    wait = true
+    $.get("/game/new?GameName="+game.name, function(data) {
+      game.gameId = data.id
+      wait = false
+    });
+    count = 0;
+    while (!game.gameId) {
+      if(count > 1000000){
+        break;
+      }
+      count++;
+    }
   },
 
   create: function(){
@@ -19,6 +35,7 @@ dungeons.prototype = {
     this.player = game.add.sprite(0, 0, 'player');
     game.physics.arcade.enable(this.player);
     this.player.body.collideWorldBounds = true;
+    this.frameSync = 60;
 
     this.getRoom();
     this.reset();
@@ -30,25 +47,21 @@ dungeons.prototype = {
     this.player.body.velocity.x = 0;
     this.player.body.velocity.y = 0;
     var cursors = game.input.keyboard.createCursorKeys();
-    var speed = 150
-
-    if (cursors.left.isDown) {
-      this.player.body.velocity.x = -1 * speed;
-    }
-    if (cursors.right.isDown) {
-      this.player.body.velocity.x = speed;
-    }
-    if (cursors.right.isDown && cursors.left.isDown) {
-      this.player.body.velocity.x = 0;
-    }
-    if (cursors.down.isDown) {
-      this.player.body.velocity.y = speed;
-    }
-    if (cursors.up.isDown) {
-      this.player.body.velocity.y = -1 *  speed;
-    }
-    if (cursors.up.isDown && cursors.down.isDown) {
-      this.player.body.velocity.y = 0;
+    if (this.playerSocketOpen) {
+      if (this.frameSync == 60) {
+        this.playerSocket.send(JSON.stringify({
+          playerId: this.player.playerId,
+          movements: {
+            left: cursors.left.isDown,
+            right: cursors.right.isDown,
+            up: cursors.up.isDown,
+            down: cursors.down.isDown
+          }
+        }))
+        this.frameSync = 0;
+      } else {
+        this.frameSync++;
+      }
     }
   },
 
@@ -70,7 +83,7 @@ dungeons.prototype = {
     this.destroyGroupChildren(this.walls);
     this.destroyGroupChildren(this.doors);
     _this = this;
-    $.get("/room/new?GameId="+window.gameId+"&RoomHash="+window.hash, function(data) {
+    $.get("/room/new?GameId="+game.gameId+"&RoomHash="+window.hash, function(data) {
       console.log(data);
       for(x=0;x<data.Width;x++) {
         for(y=0;y<data.Height;y++) {
@@ -95,5 +108,10 @@ dungeons.prototype = {
 
   openDoor: function(obj1, obj2) {
     this.getRoom();
+  },
+
+  playerMessage: function(data) {
+    console.log(data);
+    console.log(data.data);
   }
 }
