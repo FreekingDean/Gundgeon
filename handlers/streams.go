@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"github.com/gorilla/websocket"
 	"net/http"
 )
@@ -16,9 +17,11 @@ func PlayerStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	//... Use conn to send and receive messages.
+
 	for {
 		messageType, p, err := conn.ReadMessage()
+		var pq PlayerRequest
+		json.Unmarshal(p, &pq)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
