@@ -12,13 +12,17 @@ type Page struct {
 }
 
 func NewGame(w http.ResponseWriter, r *http.Request) {
-	gameName := r.URL.Query().Get("GameName")
+	playerName := r.URL.Query().Get("PlayerName")
 	var g *game.Game
-	if g = game.Games[gameName]; g == nil {
-		g = game.NewGame(gameName)
+	if len(game.Games) > 0 {
+		g = game.Games[game.MasterGame]
+	} else {
+		g = game.NewGame("MasterGame")
 	}
+	p := game.NewPlayer(playerName, g.GetId())
 	game := map[string]string{
-		"id": g.GetId(),
+		"game_id":   g.GetId(),
+		"player_id": p.GetId(),
 	}
 
 	js, err := json.Marshal(game)

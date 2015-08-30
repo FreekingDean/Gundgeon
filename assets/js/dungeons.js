@@ -11,17 +11,6 @@ dungeons.prototype = {
     _this = this;
     this.playerSocket.onopen = function(){_this.playerSocketOpen = true};
     wait = true
-    $.get("/game/new?GameName="+game.name, function(data) {
-      game.gameId = data.id
-      wait = false
-    });
-    count = 0;
-    while (!game.gameId) {
-      if(count > 1000000){
-        break;
-      }
-      count++;
-    }
   },
 
   create: function(){
@@ -33,6 +22,7 @@ dungeons.prototype = {
     this.doors.enableBody = true;
 
     this.player = game.add.sprite(0, 0, 'player');
+    this.player.playerId = game.playerId;
     game.physics.arcade.enable(this.player);
     this.player.body.collideWorldBounds = true;
     this.frameSync = 60;
@@ -49,15 +39,18 @@ dungeons.prototype = {
     var cursors = game.input.keyboard.createCursorKeys();
     if (this.playerSocketOpen) {
       if (this.frameSync == 60) {
-        this.playerSocket.send(JSON.stringify({
-          playerId: this.player.playerId,
-          movements: {
-            left: cursors.left.isDown,
-            right: cursors.right.isDown,
-            up: cursors.up.isDown,
-            down: cursors.down.isDown
-          }
-        }))
+        if (this.KeyDown(cursors)) {
+          _this = this
+          this.playerSocket.send(JSON.stringify({
+            playerId: _this.player.playerId,
+            movements: {
+              left: cursors.left.isDown,
+              right: cursors.right.isDown,
+              up: cursors.up.isDown,
+              down: cursors.down.isDown
+            }
+          }))
+        }
         this.frameSync = 0;
       } else {
         this.frameSync++;
@@ -111,7 +104,12 @@ dungeons.prototype = {
   },
 
   playerMessage: function(data) {
-    console.log(data);
-    console.log(data.data);
+    movement = JSON.parse(data.data)
+    player.body.x = movement.Position.X * 30
+    player.body.x = movement.Position.y * 30
+  },
+
+  KeyDown: function(cursors) {
+    return cursors.left.isDown || cursors.right.isDown || cursors.up.isDown || cursors.down.isDown
   }
 }
