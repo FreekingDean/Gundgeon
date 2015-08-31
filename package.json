@@ -1,0 +1,10 @@
+{
+  "name": "Gundgeon",
+  "description": "It was a dungeon crawler written in go.",
+  "author": "Dean Galvin <dean.galvin3@gmail.com>",
+  "dependencies": {
+    "express": "~4.0.0",
+    "socket.io": "~1.0.0"
+  },
+  "engine": "node ~ 0.12.7"
+}

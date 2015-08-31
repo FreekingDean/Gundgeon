@@ -2,6 +2,7 @@ var menu = function(game){ }
 
 menu.prototype = {
   preload: function(){
+    game.socket = io('http://localhost:8081');
   },
   create: function(){
     this.start_game = game.add.text(330-150, 330-100, 'Enter Your Name', { font: '30px Arial', fill: '#fff' });
