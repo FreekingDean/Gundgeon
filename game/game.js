@@ -1,9 +1,15 @@
-function game(name){
+var player = require('./player')
+
+function game(name, log){
   var name = name;
   var players = {};
 
-  function addPlayer(player, socket, io){
-    log.DEBUG(player);
+  return {
+    addPlayer: function(new_player, socket, io){
+      log.DEBUG(socket.id);
+      players[socket.id] = new(player)(new_player);
+      log.DEBUG(players[socket.id]);
+    }
   }
 }
 
