@@ -4,13 +4,7 @@ dungeons.prototype = {
   preload: function(){
     game.load.image('wall', 'images/tiles/wall_cbl.png');
     game.load.image('door', 'images/tiles/door.png');
-
     game.load.image('player', 'images/sprites/player.png');
-    this.playerSocket = new WebSocket("ws://localhost:8080/stream/player");
-    this.playerSocket.onmessage = this.playerMessage;
-    _this = this;
-    this.playerSocket.onopen = function(){_this.playerSocketOpen = true};
-    wait = true
   },
 
   create: function(){
@@ -37,24 +31,20 @@ dungeons.prototype = {
     this.player.body.velocity.x = 0;
     this.player.body.velocity.y = 0;
     var cursors = game.input.keyboard.createCursorKeys();
-    if (this.playerSocketOpen) {
-      if (this.frameSync == 60) {
-        if (this.KeyDown(cursors)) {
-          _this = this
-          this.playerSocket.send(JSON.stringify({
-            playerId: _this.player.playerId,
-            movements: {
-              left: cursors.left.isDown,
-              right: cursors.right.isDown,
-              up: cursors.up.isDown,
-              down: cursors.down.isDown
-            }
-          }))
-        }
-        this.frameSync = 0;
-      } else {
-        this.frameSync++;
+    if (this.frameSync == 60) {
+      if (this.KeyDown(cursors)) {
+        game.socket.emit('player_request', {
+          movements: {
+            left: cursors.left.isDown,
+            right: cursors.right.isDown,
+            up: cursors.up.isDown,
+            down: cursors.down.isDown
+          }
+        })
       }
+      this.frameSync = 0;
+    } else {
+      this.frameSync++;
     }
   },
 
