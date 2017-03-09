@@ -24,4 +24,8 @@ io.on('connection', function(socket) {
   socket.on('player_request', function(data) {
     mastergame.playerRequest(data, socket, io);
   });
+
+  socket.on('room_request', function(data) {
+    mastergame.roomRequest(data, socket, io);
+  });
 });

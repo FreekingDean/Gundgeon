@@ -2,9 +2,12 @@ var dungeons = function(game){ }
 
 dungeons.prototype = {
   preload: function(){
-    game.load.image('wall', 'images/tiles/wall_cbl.png');
-    game.load.image('door', 'images/tiles/door.png');
-    game.load.image('player', 'images/sprites/player.png');
+    game.load.image('wall', '/images/tiles/wall_cbl.png');
+    game.load.image('door', '/images/tiles/door.png');
+    game.load.image('player', '/images/sprites/player.png');
+
+    game.socket.on('player_update', this.playerMessage);
+    game.socket.on('room_created', this.drawRoom);
   },
 
   create: function(){
@@ -19,7 +22,7 @@ dungeons.prototype = {
     this.player.playerId = game.playerId;
     game.physics.arcade.enable(this.player);
     this.player.body.collideWorldBounds = true;
-    this.frameSync = 60;
+    this.frameSync = 30;
 
     this.getRoom();
     this.reset();
@@ -31,7 +34,7 @@ dungeons.prototype = {
     this.player.body.velocity.x = 0;
     this.player.body.velocity.y = 0;
     var cursors = game.input.keyboard.createCursorKeys();
-    if (this.frameSync == 60) {
+    if (this.frameSync == 30) {
       if (this.KeyDown(cursors)) {
         game.socket.emit('player_request', {
           movements: {
@@ -63,30 +66,9 @@ dungeons.prototype = {
   },
 
   getRoom: function() {
-    this.destroyGroupChildren(this.walls);
-    this.destroyGroupChildren(this.doors);
-    _this = this;
-    $.get("/room/new?GameId="+game.gameId+"&RoomHash="+window.hash, function(data) {
-      console.log(data);
-      for(x=0;x<data.Width;x++) {
-        for(y=0;y<data.Height;y++) {
-          center = y > 0 && y < data.Height  && x > 0 && x < data.Width - 1;
-          if (center) {
-            y = data.Height - 1;
-          }
-          xoffset = x*30 + data.PadX*30 + 30;
-          yoffset = y*30 + data.PadY*30 + 30;
-          if (x == data.ExitPos.X-1 && y == data.ExitPos.Y-1) {
-            _this.door = _this.doors.create(xoffset, yoffset, 'door');
-          } else {
-            var wall = _this.walls.create(xoffset, yoffset, 'wall');
-            wall.body.immovable = true;
-          }
-          window.hash = data.MD5;
-        }
-      }
-      _this = null;
-    });
+    game.socket.emit('room_request', {
+      seed: window.hash
+    })
   },
 
   openDoor: function(obj1, obj2) {
@@ -97,6 +79,30 @@ dungeons.prototype = {
     movement = JSON.parse(data.data)
     player.body.x = movement.Position.X * 30
     player.body.x = movement.Position.y * 30
+  },
+
+  drawRoom: function(roomData) {
+    data = JSON.parse(roomData.data)
+    this.destroyGroupChildren(this.walls);
+    this.destroyGroupChildren(this.doors);
+    console.log(data);
+    for(x=0;x<data.Width;x++) {
+      for(y=0;y<data.Height;y++) {
+        center = y > 0 && y < data.Height  && x > 0 && x < data.Width - 1;
+        if (center) {
+          y = data.Height - 1;
+        }
+        xoffset = x*30 + data.PadX*30 + 30;
+        yoffset = y*30 + data.PadY*30 + 30;
+        if (x == data.ExitPos.X-1 && y == data.ExitPos.Y-1) {
+          this.door = this.doors.create(xoffset, yoffset, 'door');
+        } else {
+          var wall = this.walls.create(xoffset, yoffset, 'wall');
+          wall.body.immovable = true;
+        }
+        window.hash = data.MD5;
+      }
+    }
   },
 
   KeyDown: function(cursors) {
